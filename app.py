@@ -45,42 +45,51 @@ dividend_yield_percent = st.sidebar.number_input(
     "Dividend Yield (%)", min_value=0.0, max_value=15.0, value=0.0, step=0.1, format="%.1f",
     help="Enter the dividend yield as a percentage (e.g., 2 for 2%). Set to 0 for non-dividend-paying stocks.")
 
-# Convert percentage inputs to decimals for the Black-Scholes calculation
-risk_free_rate = risk_free_rate_percent / 100.0
-volatility = volatility_percent / 100.0
-dividend_yield = dividend_yield_percent / 100.0
+# Add a Calculate button in the sidebar
+calculate_button = st.sidebar.button("Calculate")
 
-# Add a Calculate button
-st.markdown("### Click to Calculate")
-calculate_button = st.button("Calculate")
-
-# Perform calculations and display results only if the button is clicked
+# Only perform calculations and display results if the button is clicked
 if calculate_button:
-    # Calculate both Call and Put option prices and Greeks
-    call_result = black_scholes(underlying_price, strike_price,
-                                time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Call")
-    put_result = black_scholes(underlying_price, strike_price,
-                               time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Put")
+    # Validate inputs: ensure all inputs except dividend yield are non-zero
+    if risk_free_rate_percent <= 0.0:
+        st.error("Risk-Free Rate (%) must be greater than 0.")
+    elif underlying_price <= 0.0:
+        st.error("Underlying Asset Price must be greater than 0.")
+    elif strike_price <= 0.0:
+        st.error("Strike Price must be greater than 0.")
+    elif time_to_expiry <= 0.0:
+        st.error("Time to Expiry (years) must be greater than 0.")
+    elif volatility_percent <= 0.0:
+        st.error("Volatility (%) must be greater than 0.")
+    else:
+        # Convert percentage inputs to decimals for the Black-Scholes calculation
+        risk_free_rate = risk_free_rate_percent / 100.0
+        volatility = volatility_percent / 100.0
+        dividend_yield = dividend_yield_percent / 100.0
 
-    # Display results
-    st.header("Option Prices and Greeks")
-    col1, col2 = st.columns(2)
+        # Calculate both Call and Put option prices and Greeks
+        call_result = black_scholes(underlying_price, strike_price,
+                                    time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Call")
+        put_result = black_scholes(underlying_price, strike_price,
+                                   time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Put")
 
-    with col1:
-        st.subheader("Call Price")
-        st.write(f"{call_result['price']:.2f}")
+        # Display results
+        st.header("Option Prices and Greeks")
+        col1, col2 = st.columns(2)
 
-    with col2:
-        st.subheader("Put Price")
-        st.write(f"{put_result['price']:.2f}")
+        with col1:
+            st.subheader("Call Price")
+            st.write(f"{call_result['price']:.2f}")
 
-    # Display Greeks (using Call option Greeks as default)
-    st.subheader("")
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Delta", f"{call_result['delta']:.2f}")
-    col2.metric("Gamma", f"{call_result['gamma']:.2f}")
-    col3.metric("Theta", f"{call_result['theta']:.2f}")
-    col4.metric("Vega", f"{call_result['vega']:.2f}")
-    col5.metric("Rho", f"{call_result['rho']:.2f}")
-else:
-    st.write("Enter the parameters and click 'Calculate' to see the results.")
+        with col2:
+            st.subheader("Put Price")
+            st.write(f"{put_result['price']:.2f}")
+
+        # Display Greeks (using Call option Greeks as default)
+        st.subheader("")
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("Delta", f"{call_result['delta']:.2f}")
+        col2.metric("Gamma", f"{call_result['gamma']:.2f}")
+        col3.metric("Theta", f"{call_result['theta']:.2f}")
+        col4.metric("Vega", f"{call_result['vega']:.2f}")
+        col5.metric("Rho", f"{call_result['rho']:.2f}")
