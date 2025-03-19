@@ -22,15 +22,17 @@ st.markdown(
 )
 
 # Title (centered and on a single line)
-st.markdown('<h1 class="title">Black-Scholes Option Price Calculator</h1>',
-            unsafe_allow_html=True)
+st.markdown('<h1 class="title">Black-Scholes Option Price Calculator</h1>', unsafe_allow_html=True)
 
 # Sidebar for inputs
 st.sidebar.header("Black-Scholes Parameters")
 
 # Input fields with adjusted max values and percentage inputs
+risk_free_rate_percent = st.sidebar.number_input(
+    "Risk-Free Rate (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.1, format="%.1f",
+    help="Enter the risk-free rate as a percentage (e.g., 3 for 3%).")
 underlying_price = st.sidebar.number_input(
-    "Underlying Asset Price", min_value=0.0, max_value=1000000.0, value=30.00, step=0.01,format="%.2f")
+    "Underlying Asset Price", min_value=0.0, max_value=1000000.0, value=30.00, step=0.01, format="%.2f")
 strike_price = st.sidebar.number_input(
     "Strike Price", min_value=0.0, max_value=1000000.0, value=50.00, step=0.01, format="%.2f")
 time_to_expiry = st.sidebar.number_input(
@@ -42,37 +44,43 @@ volatility_percent = st.sidebar.number_input(
 dividend_yield_percent = st.sidebar.number_input(
     "Dividend Yield (%)", min_value=0.0, max_value=15.0, value=0.0, step=0.1, format="%.1f",
     help="Enter the dividend yield as a percentage (e.g., 2 for 2%). Set to 0 for non-dividend-paying stocks.")
-risk_free_rate_percent = st.sidebar.number_input(
-    "Risk-Free Rate (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.1, format="%.1f",
-    help="Enter the risk-free rate as a percentage (e.g., 3 for 3%).")
+
 # Convert percentage inputs to decimals for the Black-Scholes calculation
 risk_free_rate = risk_free_rate_percent / 100.0
 volatility = volatility_percent / 100.0
 dividend_yield = dividend_yield_percent / 100.0
 
-# Calculate both Call and Put option prices and Greeks
-call_result = black_scholes(underlying_price, strike_price,
-                            time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Call")
-put_result = black_scholes(underlying_price, strike_price,
-                           time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Put")
+# Add a Calculate button
+st.markdown("### Click to Calculate")
+calculate_button = st.button("Calculate")
 
-# Display results
-st.header("Option Prices and Greeks")
-col1, col2 = st.columns(2)
+# Perform calculations and display results only if the button is clicked
+if calculate_button:
+    # Calculate both Call and Put option prices and Greeks
+    call_result = black_scholes(underlying_price, strike_price,
+                                time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Call")
+    put_result = black_scholes(underlying_price, strike_price,
+                               time_to_expiry, risk_free_rate, volatility, dividend_yield, option_type="Put")
 
-with col1:
-    st.subheader("Call Price")
-    st.write(f"{call_result['price']:.2f}")
+    # Display results
+    st.header("Option Prices and Greeks")
+    col1, col2 = st.columns(2)
 
-with col2:
-    st.subheader("Put Price")
-    st.write(f"{put_result['price']:.2f}")
+    with col1:
+        st.subheader("Call Price")
+        st.write(f"{call_result['price']:.2f}")
 
-# Display Greeks (using Call option Greeks as default)
-st.subheader("")
-col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("Delta", f"{call_result['delta']:.2f}")
-col2.metric("Gamma", f"{call_result['gamma']:.2f}")
-col3.metric("Theta", f"{call_result['theta']:.2f}")
-col4.metric("Vega", f"{call_result['vega']:.2f}")
-col5.metric("Rho", f"{call_result['rho']:.2f}")
+    with col2:
+        st.subheader("Put Price")
+        st.write(f"{put_result['price']:.2f}")
+
+    # Display Greeks (using Call option Greeks as default)
+    st.subheader("")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("Delta", f"{call_result['delta']:.2f}")
+    col2.metric("Gamma", f"{call_result['gamma']:.2f}")
+    col3.metric("Theta", f"{call_result['theta']:.2f}")
+    col4.metric("Vega", f"{call_result['vega']:.2f}")
+    col5.metric("Rho", f"{call_result['rho']:.2f}")
+else:
+    st.write("Enter the parameters and click 'Calculate' to see the results.")
